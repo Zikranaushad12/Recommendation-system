@@ -1,68 +1,35 @@
-import random
-def print_deck(deck):
-    for row in deck:
-        print(" | ".join(row))
-        print("---------")
+import numpy as np
+user_item_matrix = np.array([
+    [5, 4, 0, 0, 1, 0],
+    [0, 0, 5, 4, 0, 0],
+    [4, 5, 0, 0, 2, 0],
+    [0, 0, 4, 5, 0, 0],
+    [0, 0, 0, 0, 5, 4],
+])
 
-def is_winner(deck, gamer):
-    # Check rows, columns, and diagonals
-    for i in range(3):
-        if all([deck[i][j] == gamer for j in range(3)]) or \
-           all([deck[j][i] == gamer for j in range(3)]):
-            return True
-    if all([deck[i][i] == gamer for i in range(3)]) or \
-       all([deck[i][2-i] == gamer for i in range(3)]):
-        return True
-    return False
+def recommend_items(user_item_matrix, user_id, top_n=3):
+   
+    similarities = []
+    for other_id in range(user_item_matrix.shape[0]):
+        if other_id == user_id:
+            continue
+        similarity = np.dot(user_item_matrix[user_id], user_item_matrix[other_id]) / \
+                     (np.linalg.norm(user_item_matrix[user_id]) * np.linalg.norm(user_item_matrix[other_id]))
+        similarities.append((other_id, similarity))
 
-def is_deck_full(deck):
-    return all([cell != " " for row in deck for cell in row])
+  
+    similarities.sort(key=lambda x: x[1], reverse=True)
+    top_similar_users = similarities[:top_n]
 
-def get_empty_cells(deck):
-    return [(i, j) for i in range(3) for j in range(3) if deck[i][j] == " "]
+    recommended_items = set()
+    for similar_user, _ in top_similar_users:
+        for item_id, rating in enumerate(user_item_matrix[similar_user]):
+            if rating > 0 and user_item_matrix[user_id, item_id] == 0:
+                recommended_items.add(item_id)
 
-def gamer_move(deck):
-    while True:
-        try:
-            row = int(input("Enter the row (0-2): "))
-            col = int(input("Enter the column (0-2): "))
-            if 0 <= row <= 2 and 0 <= col <= 2 and deck[row][col] == " ":
-                return row, col
-            else:
-                print("Invalid move. Try again.")
-        except ValueError:
-            print("Invalid input. Please enter numbers.")
+    return list(recommended_items)[:top_n]
 
-def computer_move(deck):
-    empty_cells = get_empty_cells(deck)
-    return random.choice(empty_cells)
 
-def play_game():
-    deck = [[" " for _ in range(3)] for _ in range(3)]
-    current_gamer = "X"
-
-    while True:
-        print_deck(deck)
-        
-        if current_gamer == "X":
-            row, col = gamer_move(deck)
-        else:
-            row, col = computer_move(deck)
-            print(f"Computer chose: {row}, {col}")
-
-        deck[row][col] = current_gamer
-
-        if is_winner(deck, current_gamer):
-            print_deck(deck)
-            print(f"{current_gamer} wins!")
-            break
-        elif is_deck_full(deck):
-            print_deck(deck)
-            print("It's a tie!")
-            break
-
-        current_gamer = "O" if current_gamer == "X" else "X"
-
-if __name__ == "__main__":
-    print("Welcome to Tic-Tac-Toe!")
-    play_game()
+user_id = 0  # Replace with the user ID for whom you want to recommend items
+recommended_items = recommend_items(user_item_matrix, user_id)
+print(f"Recommended items for user {user_id}: {recommended_items}")
