@@ -1,0 +1,68 @@
+import random
+def print_deck(deck):
+    for row in deck:
+        print(" | ".join(row))
+        print("---------")
+
+def is_winner(deck, gamer):
+    # Check rows, columns, and diagonals
+    for i in range(3):
+        if all([deck[i][j] == gamer for j in range(3)]) or \
+           all([deck[j][i] == gamer for j in range(3)]):
+            return True
+    if all([deck[i][i] == gamer for i in range(3)]) or \
+       all([deck[i][2-i] == gamer for i in range(3)]):
+        return True
+    return False
+
+def is_deck_full(deck):
+    return all([cell != " " for row in deck for cell in row])
+
+def get_empty_cells(deck):
+    return [(i, j) for i in range(3) for j in range(3) if deck[i][j] == " "]
+
+def gamer_move(deck):
+    while True:
+        try:
+            row = int(input("Enter the row (0-2): "))
+            col = int(input("Enter the column (0-2): "))
+            if 0 <= row <= 2 and 0 <= col <= 2 and deck[row][col] == " ":
+                return row, col
+            else:
+                print("Invalid move. Try again.")
+        except ValueError:
+            print("Invalid input. Please enter numbers.")
+
+def computer_move(deck):
+    empty_cells = get_empty_cells(deck)
+    return random.choice(empty_cells)
+
+def play_game():
+    deck = [[" " for _ in range(3)] for _ in range(3)]
+    current_gamer = "X"
+
+    while True:
+        print_deck(deck)
+        
+        if current_gamer == "X":
+            row, col = gamer_move(deck)
+        else:
+            row, col = computer_move(deck)
+            print(f"Computer chose: {row}, {col}")
+
+        deck[row][col] = current_gamer
+
+        if is_winner(deck, current_gamer):
+            print_deck(deck)
+            print(f"{current_gamer} wins!")
+            break
+        elif is_deck_full(deck):
+            print_deck(deck)
+            print("It's a tie!")
+            break
+
+        current_gamer = "O" if current_gamer == "X" else "X"
+
+if __name__ == "__main__":
+    print("Welcome to Tic-Tac-Toe!")
+    play_game()
